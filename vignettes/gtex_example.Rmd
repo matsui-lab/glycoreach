@@ -1,0 +1,141 @@
+---
+title: "Glycan Reachability Analysis with GTEx Data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Glycan Reachability Analysis with GTEx Data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+## Overview
+
+This vignette demonstrates how to use `glycoreach` to compute glycan
+biosynthetic reachability scores from the GTEx v8 gene expression dataset.
+
+## Installation
+
+```{r install}
+# install.packages("remotes")
+remotes::install_github("matsui-lab/glycoreach")
+```
+
+## Load data
+
+Download the GTEx v8 gene median TPM file from the
+[GTEx Portal](https://gtexportal.org/home/downloads/adult-gtex/bulk_tissue_expression):
+
+```{r load}
+library(glycoreach)
+library(data.table)
+
+# Read GTEx gene-level TPM (GCT format, skip first 2 header lines)
+gct <- fread("GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_median_tpm.gct.gz",
+             skip = 2)
+
+# Extract gene symbols and TPM matrix
+gene_symbols <- gct$Description
+tpm_cols <- setdiff(names(gct), c("Name", "Description"))
+tpm <- as.matrix(gct[, ..tpm_cols])
+rownames(tpm) <- gene_symbols
+
+# Handle duplicate gene symbols (average)
+if (any(duplicated(rownames(tpm)))) {
+  tpm <- do.call(rbind, lapply(split(seq_len(nrow(tpm)), rownames(tpm)),
+                               function(idx) colMeans(tpm[idx, , drop = FALSE])))
+}
+
+dim(tpm)
+# [1] ~56200 genes x 54 tissues
+```
+
+## Compute reachability scores
+
+```{r compute}
+# Compute all 22 reachability metrics
+res <- compute_reachability(tpm)
+print(res)
+
+# Compute only sLeX
+res_slex <- compute_reachability(tpm, pathways = "slex")
+```
+
+## Visualize tissue variation
+
+```{r viz}
+library(ggplot2)
+
+# sLeX reachability across tissues
+plot_data <- res[, .(tissue = sample, sLeX = sLeX_reachability)]
+plot_data <- plot_data[order(sLeX)]
+plot_data[, tissue := factor(tissue, levels = tissue)]
+
+ggplot(plot_data, aes(x = tissue, y = sLeX)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(title = "sLeX Reachability across GTEx Tissues",
+       x = NULL, y = "Reachability Z-score") +
+  theme_minimal()
+```
+
+## Knockout simulation
+
+Simulate the effect of knocking out FUT8 (core fucosyltransferase)
+on N-glycan core fucosylation:
+
+```{r ko}
+# Wild-type
+res_wt <- compute_reachability(tpm, pathways = "nglycan")
+
+# FUT8 knockout
+res_ko <- compute_reachability(tpm, pathways = "nglycan", ko_genes = "FUT8")
+
+# Compare core fucosylation scores
+comparison <- data.table(
+  tissue = res_wt$sample,
+  WT = res_wt$Ng_coreFuc,
+  KO = res_ko$Ng_coreFuc,
+  delta = res_ko$Ng_coreFuc - res_wt$Ng_coreFuc
+)
+print(comparison[order(delta)])
+```
+
+## Using pre-computed reference Z-scores
+
+When comparing new samples against the GTEx reference, use GTEx-derived
+mean and SD for normalization:
+
+```{r reference}
+# Compute reference statistics from GTEx (full sample-level data)
+full_tpm <- fread("GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_tpm.gct.gz",
+                  skip = 2)
+# ... extract matrix as above ...
+
+L_ref <- log1p(full_tpm_matrix)
+ref_mu <- rowMeans(L_ref, na.rm = TRUE)
+ref_sd <- apply(L_ref, 1, sd, na.rm = TRUE)
+ref_sd[ref_sd == 0] <- 1
+
+# Apply to new data using GTEx reference
+new_res <- compute_reachability(new_tpm, mu = ref_mu, sd = ref_sd)
+```
+
+## Pathway definitions
+
+View the built-in pathway definitions:
+
+```{r defs}
+defs <- load_pathway_definitions()
+names(defs$pathways)
+# [1] "sLeX" "gangliosides" "heparan_sulfate" "N_glycan_processing" "O_GalNAc"
+
+# Inspect sLeX pathway
+str(defs$pathways$sLeX)
+```

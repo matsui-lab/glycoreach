@@ -1,0 +1,202 @@
+{
+  "_description": "Glycan biosynthetic pathway definitions for reachability analysis",
+  "_version": "1.1",
+  "_logic_rules": {
+    "AND": "min aggregation — all components required (sequential steps, coordinated subunits)",
+    "OR": "mean aggregation — any isozyme suffices (functionally redundant enzymes)",
+    "OR_alternative": "max aggregation — alternative pathways (e.g., de novo vs salvage)"
+  },
+  "_references": {
+    "GlycoMaple": "Huang et al. 2021, Dev Cell 56:1195-1209",
+    "SNFG": "Neelamegham et al. 2019, Glycobiology 29:515-519",
+    "GlycoEnzOnto": "Venkatesan & Neelamegham 2022, Bioinformatics 38:5413-5420"
+  },
+  "donor_substrates": {
+    "CMP_Sia": {
+      "description": "CMP-sialic acid synthesis and Golgi transport",
+      "logic": "AND",
+      "rationale": "GNE → NANS → NANP is a sequential biosynthetic pathway; CMAS activates; SLC35A1 transports to Golgi",
+      "steps": [
+        {"gene": "GNE", "function": "UDP-GlcNAc 2-epimerase / ManNAc kinase", "step": "synthesis_1"},
+        {"gene": "NANS", "function": "Neu5Ac-9-P synthase", "step": "synthesis_2"},
+        {"gene": "NANP", "function": "Neu5Ac-9-P phosphatase", "step": "synthesis_3"},
+        {"gene": "CMAS", "function": "CMP-Neu5Ac synthetase", "step": "activation"},
+        {"gene": "SLC35A1", "function": "CMP-sialic acid Golgi transporter", "step": "transport"}
+      ]
+    },
+    "GDP_Fuc": {
+      "description": "GDP-fucose via de novo or salvage pathway",
+      "logic": "OR_alternative (max of de_novo, salvage)",
+      "de_novo": {
+        "logic": "AND",
+        "steps": [
+          {"gene": "GMDS", "function": "GDP-mannose 4,6-dehydratase"},
+          {"gene": "TSTA3", "function": "GDP-4-keto-6-deoxy-D-mannose 3,5-epimerase-4-reductase (FX)"},
+          {"gene": "SLC35C1", "function": "GDP-fucose Golgi transporter"}
+        ]
+      },
+      "salvage": {
+        "logic": "AND",
+        "rationale": "FUK and FPGT are sequential: FUK phosphorylates free fucose, FPGT converts to GDP-Fuc",
+        "steps": [
+          {"gene": "FUK", "function": "Fucokinase"},
+          {"gene": "FPGT", "function": "Fucose-1-P guanylyltransferase"},
+          {"gene": "SLC35C1", "function": "GDP-fucose Golgi transporter"}
+        ]
+      }
+    },
+    "UDP_Gal": {
+      "description": "UDP-galactose synthesis and Golgi transport",
+      "logic": "AND",
+      "steps": [
+        {"gene": "UGP2", "function": "UDP-glucose pyrophosphorylase"},
+        {"gene": "GALE", "function": "UDP-galactose-4-epimerase"},
+        {"gene": "SLC35A2", "function": "UDP-galactose Golgi transporter"}
+      ]
+    },
+    "UDP_GalNAc": {
+      "description": "UDP-GalNAc supply and transport",
+      "logic": "AND",
+      "steps": [
+        {"gene": "UAP1", "function": "UDP-GalNAc pyrophosphorylase"},
+        {"genes": ["SLC35D1", "SLC35A2"], "logic": "OR", "function": "UDP-GalNAc Golgi transport"}
+      ]
+    },
+    "PAPS": {
+      "description": "3'-phosphoadenosine-5'-phosphosulfate synthesis and transport",
+      "logic": "AND",
+      "steps": [
+        {"genes": ["PAPSS1", "PAPSS2"], "logic": "OR", "function": "PAPS synthase"},
+        {"genes": ["SLC35B2", "SLC35B3"], "logic": "OR", "function": "PAPS Golgi transporter"}
+      ]
+    }
+  },
+  "pathways": {
+    "sLeX": {
+      "description": "Sialyl Lewis X biosynthesis",
+      "product": "NeuAca2-3Galb1-4(Fuca1-3)GlcNAc",
+      "metrics": ["sLeX_reachability"],
+      "logic": "AND across all steps + donor substrates",
+      "steps": [
+        {
+          "name": "LacNAc_formation",
+          "genes": ["B4GALT1", "B4GALT2", "B4GALT3", "B4GALT4", "B4GALT5", "B4GALT6"],
+          "logic": "OR",
+          "rationale": "B4GALT1-6 are isozymes with overlapping but distinct substrate specificities for LacNAc synthesis"
+        },
+        {
+          "name": "alpha2_3_sialylation",
+          "genes": ["ST3GAL3", "ST3GAL4", "ST3GAL6"],
+          "logic": "OR",
+          "rationale": "ST3GAL3/4/6 can all add alpha2-3 sialic acid to type 2 LacNAc"
+        },
+        {
+          "name": "alpha1_3_4_fucosylation",
+          "genes": ["FUT3", "FUT5", "FUT6"],
+          "logic": "OR",
+          "rationale": "FUT3/5/6 catalyze alpha1-3/4 fucosylation to complete sLeX; FUT5 may be a pseudogene in some populations"
+        }
+      ],
+      "required_donors": ["UDP_Gal", "CMP_Sia", "GDP_Fuc"]
+    },
+    "gangliosides": {
+      "description": "Ganglioside biosynthesis (GM3, GM1, GD3)",
+      "metrics": ["GM3_reach", "GM1_reach", "GD3_reach"],
+      "steps": {
+        "LacCer": {
+          "logic": "AND",
+          "components": [
+            {"gene": "UGCG", "function": "GlcCer synthase"},
+            {"genes": ["B4GALT5", "B4GALT6"], "logic": "OR", "function": "LacCer synthase"}
+          ],
+          "required_donors": ["UDP_Gal"]
+        },
+        "GM3": {
+          "logic": "AND (LacCer + ST3GAL5 + CMP_Sia + UDP_Gal)",
+          "additional_enzymes": [
+            {"gene": "ST3GAL5", "function": "GM3 synthase (SAT-I)"}
+          ],
+          "required_donors": ["CMP_Sia", "UDP_Gal"]
+        },
+        "GM1": {
+          "logic": "AND (GM3 + B4GALNT1 + B3GALT4 + donors)",
+          "additional_enzymes": [
+            {"gene": "B4GALNT1", "function": "GM2/GD2 synthase"},
+            {"gene": "B3GALT4", "function": "GM1/GD1b synthase"}
+          ],
+          "required_donors": ["UDP_GalNAc", "UDP_Gal"]
+        },
+        "GD3": {
+          "logic": "AND (GM3 + ST8SIA1 + CMP_Sia)",
+          "additional_enzymes": [
+            {"gene": "ST8SIA1", "function": "GD3 synthase (SAT-II)"}
+          ],
+          "required_donors": ["CMP_Sia"]
+        }
+      },
+      "note": "GD1a, GD1b, GT1b are not modeled in this version. Extension requires additional enzyme steps."
+    },
+    "heparan_sulfate": {
+      "description": "Heparan sulfate biosynthesis with configurable sulfation",
+      "metrics": ["HS_poly", "PAPS", "HS_N", "HS_2O", "HS_6O", "HS_3O",
+                  "reach_FGF_like", "reach_WNT_like", "reach_SHH_like"],
+      "core_steps": [
+        {
+          "name": "chain_polymerization",
+          "genes": ["EXT1", "EXT2"],
+          "logic": "OR",
+          "rationale": "EXT1 and EXT2 form a hetero-oligomeric complex but either can polymerize independently"
+        }
+      ],
+      "sulfation_modules": {
+        "N_sulfation": {"genes": ["NDST1", "NDST2", "NDST3", "NDST4"], "logic": "OR"},
+        "2O_sulfation": {"genes": ["HS2ST1"], "logic": "single_gene"},
+        "6O_sulfation": {"genes": ["HS6ST1", "HS6ST2", "HS6ST3"], "logic": "OR"},
+        "3O_sulfation": {"genes": ["HS3ST1", "HS3ST2", "HS3ST3A1", "HS3ST3B1", "HS3ST4", "HS3ST5", "HS3ST6"], "logic": "OR",
+                         "note": "HS3STs have distinct substrate specificities; treating as OR is a simplification"}
+      },
+      "ligand_profiles": {
+        "FGF_like": {"requirements": ["N_sulfation", "2O_sulfation"], "reference": "Rapraeger et al. 1991"},
+        "WNT_like": {"requirements": ["N_sulfation", "6O_sulfation"], "reference": "Ai et al. 2003"},
+        "SHH_like": {"requirements": ["N_sulfation", "6O_sulfation"],
+                     "note": "Produces identical score to WNT_like; listed separately for biological context"}
+      },
+      "required_donors": ["PAPS"]
+    },
+    "N_glycan_processing": {
+      "description": "N-glycan processing from high-mannose to complex/hybrid forms",
+      "metrics": ["Ng_complex", "Ng_branch", "Ng_bisect", "Ng_coreFuc", "Ng_sia"],
+      "steps": [
+        {"name": "ALG_precursor", "genes": ["ALG1","ALG2","ALG3","ALG5","ALG6","ALG8","ALG9","ALG10","ALG11","ALG12","ALG13","ALG14"], "logic": "OR"},
+        {"name": "OST_transfer", "genes": ["STT3A","STT3B","RPN1","RPN2","DAD1","DDOST","OSTC","TUSC3","MAGT1"], "logic": "OR"},
+        {"name": "mannosidase_I", "genes": ["MAN1A1","MAN1A2","MAN1B1","MAN1C1"], "logic": "OR"},
+        {"name": "GnT_I", "genes": ["MGAT1"], "logic": "single_gene"},
+        {"name": "mannosidase_II", "genes": ["MAN2A1","MAN2A2"], "logic": "OR"},
+        {"name": "GnT_II", "genes": ["MGAT2"], "logic": "single_gene"},
+        {"name": "branching", "genes": ["MGAT4A","MGAT4B","MGAT5"], "logic": "OR"},
+        {"name": "core_fucosylation", "genes": ["FUT8"], "logic": "single_gene", "required_donors": ["GDP_Fuc"]},
+        {"name": "bisecting_GlcNAc", "genes": ["MGAT3"], "logic": "single_gene"},
+        {"name": "sialylation", "genes": ["ST6GAL1","ST6GAL2"], "logic": "OR", "required_donors": ["CMP_Sia"]}
+      ]
+    },
+    "O_GalNAc": {
+      "description": "O-GalNAc (mucin-type) glycosylation",
+      "metrics": ["OGN_Tn", "OGN_Core1", "OGN_Core2", "OGN_sia"],
+      "steps": [
+        {
+          "name": "Tn_initiation",
+          "genes": ["GALNT1","GALNT2","GALNT3","GALNT4","GALNT5","GALNT6","GALNT7",
+                    "GALNT8","GALNT9","GALNT10","GALNT11","GALNT12","GALNT13","GALNT14",
+                    "GALNT15","GALNT16","GALNT17","GALNT18","GALNT19","GALNT20"],
+          "logic": "OR",
+          "rationale": "All 20 ppGalNAcTs can initiate O-GalNAc glycosylation with overlapping but distinct peptide substrate specificities",
+          "required_donors": ["UDP_GalNAc"]
+        },
+        {"name": "Core1", "genes": ["C1GALT1"], "logic": "single_gene",
+         "chaperone": "C1GALT1C1 (COSMC)", "required_donors": ["UDP_Gal"]},
+        {"name": "Core2", "genes": ["GCNT1"], "logic": "single_gene"},
+        {"name": "sialylation", "genes": ["ST3GAL1","ST3GAL2"], "logic": "OR", "required_donors": ["CMP_Sia"]}
+      ]
+    }
+  }
+}

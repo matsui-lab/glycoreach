@@ -1,0 +1,24 @@
+Package: glycoreach
+Title: Glycan Reachability Analysis from Transcriptomics
+Version: 0.1.0
+Authors@R: c(
+    person("Matsui", "Lab", email = "matsui@example.com", role = c("aut", "cre")))
+Description: Computes glycan biosynthetic reachability scores from gene expression
+    data using AND/OR logic and min-aggregation (bottleneck principle). Supports
+    sialyl Lewis X, ganglioside, heparan sulfate, N-glycan, and O-GalNAc pathways.
+    Applicable to bulk RNA-seq, pseudobulk single-cell, or any gene expression matrix.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends: R (>= 4.1.0)
+Imports:
+    data.table,
+    jsonlite
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+URL: https://github.com/matsui-lab/glycoreach
+BugReports: https://github.com/matsui-lab/glycoreach/issues
