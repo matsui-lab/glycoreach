@@ -23,7 +23,7 @@ zscore_matrix <- function(tpm, mu = NULL, sd = NULL) {
   L <- log1p(tpm)
   if (is.null(mu)) mu <- rowMeans(L, na.rm = TRUE)
   if (is.null(sd)) {
-    sd <- apply(L, 1, sd, na.rm = TRUE)
+    sd <- apply(L, 1, stats::sd, na.rm = TRUE)
     sd[sd == 0 | is.na(sd)] <- 1
   }
   (L - mu) / sd

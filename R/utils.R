@@ -45,6 +45,6 @@ pmax_na <- function(a, b) {
 #' @keywords internal
 grp <- function(syms, Z) {
   ids <- intersect(syms, rownames(Z))
-  if (length(ids) == 0L) return(setNames(rep(NA_real_, ncol(Z)), colnames(Z)))
+  if (length(ids) == 0L) return(stats::setNames(rep(NA_real_, ncol(Z)), colnames(Z)))
   colMeans(Z[ids, , drop = FALSE], na.rm = TRUE)
 }

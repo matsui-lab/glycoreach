@@ -12,12 +12,12 @@ test_that("zscore_matrix produces correct dimensions", {
 })
 
 test_that("zscore_matrix handles zero-variance genes", {
-  tpm <- matrix(c(5, 5, 5, 10, 20, 30),
-                nrow = 2,
+  tpm <- matrix(c(5, 10, 5, 20, 5, 30), nrow = 2,
                 dimnames = list(c("CONST", "VAR"), c("S1", "S2", "S3")))
+  tpm["CONST", ] <- 5  # ensure truly constant
   Z <- zscore_matrix(tpm)
-  # Constant gene should have Z = 0 (sd forced to 1)
-  expect_true(all(Z["CONST", ] == 0))
+  # Constant gene: log1p(5)=1.79 for all samples, so L-mu=0; sd forced to 1 → Z=0
+  expect_true(all(abs(Z["CONST", ]) < 1e-10))
 })
 
 test_that("compute_reachability returns expected columns for slex", {

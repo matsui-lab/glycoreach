@@ -1,3 +1,13 @@
+# Suppress R CMD check notes for data.table := operator
+utils::globalVariables(c(
+  ":=",
+  "sLeX_reachability", "GM3_reach", "GM1_reach", "GD3_reach",
+  "HS_poly", "PAPS", "HS_N", "HS_2O", "HS_6O", "HS_3O",
+  "reach_FGF_like", "reach_WNT_like", "reach_SHH_like",
+  "Ng_complex", "Ng_branch", "Ng_bisect", "Ng_coreFuc", "Ng_sia",
+  "OGN_Tn", "OGN_Core1", "OGN_Core2", "OGN_sia"
+))
+
 #' Compute glycan reachability scores
 #'
 #' Computes reachability scores for five glycan biosynthetic families
