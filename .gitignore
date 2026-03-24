@@ -6,3 +6,6 @@
 *.o
 *.so
 *.dll
+docs/node_modules/
+docs/dist/
+.env
