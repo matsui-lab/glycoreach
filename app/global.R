@@ -3,10 +3,12 @@
 suppressPackageStartupMessages({
   library(shiny)
   library(data.table)
+  library(R.utils)      # required by fread() for .gz decompression
   library(plotly)
   library(DT)
   library(ggplot2)
   library(heatmaply)
+  library(bslib)        # used in ui.R for bs_theme()
 })
 
 source("R/utils.R")
