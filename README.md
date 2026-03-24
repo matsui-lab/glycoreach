@@ -29,14 +29,23 @@ remotes::install_github("matsui-lab/glycoreach")
 ```r
 library(glycoreach)
 
-# From a TPM matrix (genes x samples, rownames = gene symbols)
-res <- compute_reachability(tpm_matrix)
+# Simulate a small TPM matrix (genes x samples)
+genes <- c("GNE", "NANS", "NANP", "CMAS", "SLC35A1",
+           "B4GALT1", "ST3GAL4", "FUT3",
+           "GMDS", "TSTA3", "SLC35C1",
+           "UGP2", "GALE", "SLC35A2")
+set.seed(42)
+tpm <- matrix(runif(length(genes) * 5, 1, 100), nrow = length(genes),
+              dimnames = list(genes, paste0("sample", 1:5)))
+
+# Compute reachability (all pathways)
+res <- compute_reachability(tpm)
 
 # Specific pathways only
-res <- compute_reachability(tpm_matrix, pathways = c("slex", "ganglioside"))
+res <- compute_reachability(tpm, pathways = c("slex", "ganglioside"))
 
 # KO simulation
-res_ko <- compute_reachability(tpm_matrix, ko_genes = "FUT8")
+res_ko <- compute_reachability(tpm, ko_genes = "FUT8")
 ```
 
 ## How it works
