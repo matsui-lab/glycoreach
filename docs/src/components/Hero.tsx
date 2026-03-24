@@ -56,7 +56,7 @@ export default function Hero() {
             Glycan Reachability Analysis
           </h1>
           <p className="text-xl md:text-2xl text-slate-600 mb-8 max-w-3xl mx-auto font-normal leading-relaxed">
-            A Bottleneck-Aware Framework for Inferring Tissue-Specific Glycan Biosynthetic Potential from Transcriptomics.
+            A Bottleneck-Aware Framework for Inferring Glycan Biosynthetic Potential from Transcriptomics.
           </p>
           
           <div className="relative max-w-2xl mx-auto mb-12">
