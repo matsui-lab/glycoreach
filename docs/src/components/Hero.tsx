@@ -15,7 +15,7 @@ const Hexagon = ({ className, delay }: { className: string, delay: number }) => 
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-slate-50 to-indigo-50 text-slate-900">
+    <section className="relative min-h-[calc(100vh-3.5rem)] flex items-center justify-center overflow-hidden bg-gradient-to-b from-slate-50 to-indigo-50 text-slate-900">
       {/* Artistic Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <Hexagon className="text-blue-300 top-1/4 left-1/4 w-32" delay={0} />
