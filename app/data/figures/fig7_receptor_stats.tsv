@@ -1,0 +1,5 @@
+cascade	family	bio	rho_rec	pval_rec	rho_down	pval_down	n_tissues
+WNT	HS	Tissue patterning / stem cell niche	0.8267	1.4179495606558e-13	0.846	1.05005015284097e-14	50
+SHH	HS	Morphogen gradient formation	0.7229	3.05453767084811e-09	0.5337	6.56600853473367e-05	50
+EGFR	Ganglio	Receptor lateral regulation (lipid raft)	0.5954	5.09691979195948e-06	0.4829	0.000382142046870392	50
+Selectin	sLeX	Leukocyte adhesion / inflammation	0.5513	3.33958892351241e-05	0.5607	2.28235408380062e-05	50
