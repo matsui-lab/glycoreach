@@ -406,7 +406,7 @@ export default function Concept() {
                     Molecular Components
                   </h3>
                   <span className="text-xs font-semibold px-3 py-1 bg-slate-100 text-slate-600 rounded-lg border border-slate-200 whitespace-nowrap">
-                    Raw Expression Values
+                    Normalized Expression (Z-score)
                   </span>
                 </div>
                 <p className="text-sm text-slate-500">{PRESET_DESCRIPTIONS[activePreset]}</p>
