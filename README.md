@@ -52,7 +52,6 @@ res_ko <- compute_reachability(tpm_matrix, ko_genes = "FUT8")
 ## Vignettes
 
 - [GTEx bulk RNA-seq example](vignettes/gtex_example.Rmd)
-- [Tabula Sapiens single-cell example](vignettes/tabula_sapiens.Rmd)
 
 ## Citation
 
