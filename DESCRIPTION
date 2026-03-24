@@ -1,6 +1,6 @@
 Package: glycoreach
 Title: Glycan Reachability Analysis from Transcriptomics
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
     person("Yusuke", "Matsui", email = "mail.to.matsui@gmail.com", role = c("aut", "cre")))
 Description: Computes glycan biosynthetic reachability scores from gene expression

@@ -1,6 +1,6 @@
 {
   "_description": "Glycan biosynthetic pathway definitions for reachability analysis",
-  "_version": "1.1",
+  "_version": "1.2",
   "_logic_rules": {
     "AND": "min aggregation — all components required (sequential steps, coordinated subunits)",
     "OR": "mean aggregation — any isozyme suffices (functionally redundant enzymes)",
@@ -57,8 +57,10 @@
     "UDP_GalNAc": {
       "description": "UDP-GalNAc supply and transport",
       "logic": "AND",
+      "rationale": "GALE epimerizes UDP-GlcNAc to UDP-GalNAc; UAP1 pyrophosphorylates; transport to Golgi",
       "steps": [
         {"gene": "UAP1", "function": "UDP-GalNAc pyrophosphorylase"},
+        {"gene": "GALE", "function": "UDP-galactose-4-epimerase (also epimerizes UDP-GlcNAc to UDP-GalNAc)"},
         {"genes": ["SLC35D1", "SLC35A2"], "logic": "OR", "function": "UDP-GalNAc Golgi transport"}
       ]
     },
@@ -100,8 +102,8 @@
       "required_donors": ["UDP_Gal", "CMP_Sia", "GDP_Fuc"]
     },
     "gangliosides": {
-      "description": "Ganglioside biosynthesis (GM3, GM1, GD3)",
-      "metrics": ["GM3_reach", "GM1_reach", "GD3_reach"],
+      "description": "Ganglioside biosynthesis (GM3, GM2, GM1, GD3)",
+      "metrics": ["GM3_reach", "GM2_reach", "GM1_reach", "GD3_reach"],
       "steps": {
         "LacCer": {
           "logic": "AND",
@@ -118,13 +120,19 @@
           ],
           "required_donors": ["CMP_Sia", "UDP_Gal"]
         },
-        "GM1": {
-          "logic": "AND (GM3 + B4GALNT1 + B3GALT4 + donors)",
+        "GM2": {
+          "logic": "AND (GM3 + B4GALNT1 + UDP_GalNAc)",
           "additional_enzymes": [
-            {"gene": "B4GALNT1", "function": "GM2/GD2 synthase"},
+            {"gene": "B4GALNT1", "function": "GM2/GD2 synthase"}
+          ],
+          "required_donors": ["UDP_GalNAc"]
+        },
+        "GM1": {
+          "logic": "AND (GM2 + B3GALT4 + UDP_Gal)",
+          "additional_enzymes": [
             {"gene": "B3GALT4", "function": "GM1/GD1b synthase"}
           ],
-          "required_donors": ["UDP_GalNAc", "UDP_Gal"]
+          "required_donors": ["UDP_Gal"]
         },
         "GD3": {
           "logic": "AND (GM3 + ST8SIA1 + CMP_Sia)",
@@ -144,8 +152,8 @@
         {
           "name": "chain_polymerization",
           "genes": ["EXT1", "EXT2"],
-          "logic": "OR",
-          "rationale": "EXT1 and EXT2 form a hetero-oligomeric complex but either can polymerize independently"
+          "logic": "AND",
+          "rationale": "EXT1 and EXT2 form a required heteromeric complex; both subunits are necessary for HS chain polymerization"
         }
       ],
       "sulfation_modules": {
@@ -158,8 +166,9 @@
       "ligand_profiles": {
         "FGF_like": {"requirements": ["N_sulfation", "2O_sulfation"], "reference": "Rapraeger et al. 1991"},
         "WNT_like": {"requirements": ["N_sulfation", "6O_sulfation"], "reference": "Ai et al. 2003"},
-        "SHH_like": {"requirements": ["N_sulfation", "6O_sulfation"],
-                     "note": "Produces identical score to WNT_like; listed separately for biological context"}
+        "SHH_like": {"requirements": ["N_sulfation", "6O_sulfation", "3O_sulfation"],
+                     "reference": "Shworak et al. 1999",
+                     "note": "SHH requires 3-O sulfation for HS binding, distinguishing it from WNT"}
       },
       "required_donors": ["PAPS"]
     },
@@ -167,8 +176,16 @@
       "description": "N-glycan processing from high-mannose to complex/hybrid forms",
       "metrics": ["Ng_complex", "Ng_branch", "Ng_bisect", "Ng_coreFuc", "Ng_sia"],
       "steps": [
-        {"name": "ALG_precursor", "genes": ["ALG1","ALG2","ALG3","ALG5","ALG6","ALG8","ALG9","ALG10","ALG11","ALG12","ALG13","ALG14"], "logic": "OR"},
-        {"name": "OST_transfer", "genes": ["STT3A","STT3B","RPN1","RPN2","DAD1","DDOST","OSTC","TUSC3","MAGT1"], "logic": "OR"},
+        {"name": "ALG_precursor",
+         "logic": "AND",
+         "rationale": "LLO assembly is a sequential pathway; all ALG genes required. ALG13/ALG14 form a heteromeric complex (AND-paired).",
+         "genes": ["DPAGT1","ALG13","ALG14","ALG1","ALG2","ALG11","ALG3","ALG9","ALG12","ALG6","ALG8","ALG10","ALG5"]},
+        {"name": "OST_transfer",
+         "logic": "AND (catalytic OR + structural AND + oxidoreductase OR)",
+         "rationale": "OST has catalytic subunits STT3A/B (either suffices), structural subunits (all required), and oxidoreductase TUSC3/MAGT1 (either suffices)",
+         "catalytic": {"genes": ["STT3A","STT3B"], "logic": "OR"},
+         "structural": {"genes": ["RPN1","RPN2","DAD1","DDOST","OSTC"], "logic": "AND"},
+         "oxidoreductase": {"genes": ["TUSC3","MAGT1"], "logic": "OR"}},
         {"name": "mannosidase_I", "genes": ["MAN1A1","MAN1A2","MAN1B1","MAN1C1"], "logic": "OR"},
         {"name": "GnT_I", "genes": ["MGAT1"], "logic": "single_gene"},
         {"name": "mannosidase_II", "genes": ["MAN2A1","MAN2A2"], "logic": "OR"},

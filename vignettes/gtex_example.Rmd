@@ -59,7 +59,7 @@ dim(tpm)
 ## Compute reachability scores
 
 ```{r compute}
-# Compute all 22 reachability metrics
+# Compute all 23 reachability metrics
 res <- compute_reachability(tpm)
 print(res)
 

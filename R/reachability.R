@@ -1,7 +1,7 @@
 # Suppress R CMD check notes for data.table := operator
 utils::globalVariables(c(
   ":=",
-  "sLeX_reachability", "GM3_reach", "GM1_reach", "GD3_reach",
+  "sLeX_reachability", "GM3_reach", "GM2_reach", "GM1_reach", "GD3_reach",
   "HS_poly", "PAPS", "HS_N", "HS_2O", "HS_6O", "HS_3O",
   "reach_FGF_like", "reach_WNT_like", "reach_SHH_like",
   "Ng_complex", "Ng_branch", "Ng_bisect", "Ng_coreFuc", "Ng_sia",
@@ -78,8 +78,8 @@ compute_reachability <- function(tpm, is_zscore = FALSE, mu = NULL, sd = NULL,
   GDP_Fuc    <- pmax_na(GDP_Fuc_de, GDP_Fuc_sv)
   # UDP-Gal
   UDP_Gal    <- pmin_na(g("UGP2"), g("GALE"), g("SLC35A2"))
-  # UDP-GalNAc
-  UDP_GalNAc <- pmin_na(g("UAP1"), g(c("SLC35D1", "SLC35A2")))
+  # UDP-GalNAc (GALE epimerizes UDP-GlcNAc to UDP-GalNAc)
+  UDP_GalNAc <- pmin_na(g("UAP1"), g("GALE"), g(c("SLC35D1", "SLC35A2")))
   # PAPS
   PAPS       <- pmin_na(g(c("PAPSS1", "PAPSS2")), g(c("SLC35B2", "SLC35B3")))
 
@@ -98,16 +98,19 @@ compute_reachability <- function(tpm, is_zscore = FALSE, mu = NULL, sd = NULL,
   if ("ganglioside" %in% pathways) {
     LacCer <- pmin_na(g("UGCG"), g(c("B4GALT5", "B4GALT6")))
     GM3    <- pmin_na(LacCer, g("ST3GAL5"), CMP_Sia, UDP_Gal)
-    GM1    <- pmin_na(GM3, g("B4GALNT1"), UDP_GalNAc, g("B3GALT4"), UDP_Gal)
+    GM2    <- pmin_na(GM3, g("B4GALNT1"), UDP_GalNAc)
+    GM1    <- pmin_na(GM2, g("B3GALT4"), UDP_Gal)
     GD3    <- pmin_na(GM3, g("ST8SIA1"), CMP_Sia)
     results[, GM3_reach := as.numeric(GM3)]
+    results[, GM2_reach := as.numeric(GM2)]
     results[, GM1_reach := as.numeric(GM1)]
     results[, GD3_reach := as.numeric(GD3)]
   }
 
   # ---- Heparan sulfate ----
   if ("hs" %in% pathways) {
-    HS_poly <- g(c("EXT1", "EXT2"))
+    # EXT1/EXT2 form a required heteromeric complex (AND, not OR)
+    HS_poly <- pmin_na(g("EXT1"), g("EXT2"))
     HS_N    <- g(c("NDST1", "NDST2", "NDST3", "NDST4"))
     HS_2O   <- g("HS2ST1")
     HS_6O   <- g(c("HS6ST1", "HS6ST2", "HS6ST3"))
@@ -132,15 +135,24 @@ compute_reachability <- function(tpm, is_zscore = FALSE, mu = NULL, sd = NULL,
     results[, HS_3O         := as.numeric(HS_3O)]
     results[, reach_FGF_like := as.numeric(hs_reach(req_N = TRUE, req_2O = TRUE))]
     results[, reach_WNT_like := as.numeric(hs_reach(req_N = TRUE, req_6O = TRUE))]
-    results[, reach_SHH_like := as.numeric(hs_reach(req_N = TRUE, req_6O = TRUE))]
+    # SHH requires 3-O sulfation for HS binding
+    results[, reach_SHH_like := as.numeric(hs_reach(req_N = TRUE, req_6O = TRUE, req_3O = TRUE))]
   }
 
   # ---- N-glycan processing ----
   if ("nglycan" %in% pathways) {
-    ALG     <- g(c("ALG1", "ALG2", "ALG3", "ALG5", "ALG6", "ALG8",
-                   "ALG9", "ALG10", "ALG11", "ALG12", "ALG13", "ALG14"))
-    OST     <- g(c("STT3A", "STT3B", "RPN1", "RPN2", "DAD1",
-                   "DDOST", "OSTC", "TUSC3", "MAGT1"))
+    # LLO assembly: all ALG genes are sequential steps (AND)
+    ALG     <- pmin_na(g("DPAGT1"),
+                       pmin_na(g("ALG13"), g("ALG14")),
+                       g("ALG1"), g("ALG2"), g("ALG11"),
+                       g("ALG3"), g("ALG9"), g("ALG12"),
+                       g("ALG6"), g("ALG8"), g("ALG10"),
+                       g("ALG5"))
+    # OST: catalytic STT3A/B (OR) + structural subunits (AND) + oxidoreductase (OR)
+    OST_cat   <- g(c("STT3A", "STT3B"))
+    OST_str   <- pmin_na(g("RPN1"), g("RPN2"), g("DAD1"), g("DDOST"), g("OSTC"))
+    OST_oxred <- g(c("TUSC3", "MAGT1"))
+    OST       <- pmin_na(OST_cat, OST_str, OST_oxred)
     MAN_I   <- g(c("MAN1A1", "MAN1A2", "MAN1B1", "MAN1C1"))
     MAN_II  <- g(c("MAN2A1", "MAN2A2"))
     MGAT1   <- g("MGAT1")
