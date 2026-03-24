@@ -35,7 +35,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
 
         {/* Content */}
         <main className="min-w-0 flex-1 max-w-3xl">
-          <article className="prose prose-slate prose-headings:font-bold prose-h1:text-3xl prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-lg prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-code:text-blue-700 prose-code:before:content-none prose-code:after:content-none max-w-none">
+          <article className="prose prose-slate prose-headings:font-bold prose-h1:text-3xl prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-lg prose-pre:bg-slate-100 prose-pre:text-slate-800 prose-pre:border prose-pre:border-slate-200 prose-code:text-blue-700 prose-code:before:content-none prose-code:after:content-none max-w-none">
             {children}
           </article>
         </main>
